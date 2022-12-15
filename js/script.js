@@ -8,19 +8,21 @@ function noMatch() {
 function displayMatches(matches) {
   cardWrapper.innerHTML = '';
 
-  if (!matches.length) {
+  if (!matches) {
     noMatch();
+  } else {
+    for (var matchObj of matches) {
+      cardWrapper.insertAdjacentHTML('beforeend', `
+      <div class="movie-card" style="background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${matchObj.Poster});">
+        <h3>${matchObj.Title}</h3>
+        <p>Release Year: ${matchObj.Year}</p>
+        <a href="https://www.imdb.com/title/${matchObj.imdbID}" target="_blank">View More Info Here</a>
+      </div>
+      `);
+    }
   }
 
-  for (var matchObj of matches) {
-    cardWrapper.insertAdjacentHTML('beforeend', `
-    <div class="movie-card" style="background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${matchObj.movie_image});">
-      <h3>${matchObj.title}</h3>
-      <p>${matchObj.description}</p>
-      <a href="${matchObj.imdb_link}" target="_blank">View More Info Here</a>
-    </div>
-    `);
-  }
+
 }
 
 function fetchMovies(event) {
@@ -28,18 +30,19 @@ function fetchMovies(event) {
   var searchText = searchInput.value.toLowerCase().trim();
 
   if (keyCode === 13 && searchText) {
-    var matches = [];
 
-    for (var movieObj of movieData) {
+    var responsePromise = fetch(`https://www.omdbapi.com/?apikey=20dc4c7f&s=${searchText}`);
 
-      if (movieObj.title.toLowerCase().includes(searchText)) {
-        matches.push(movieObj);
-      }
-
+    function handleResponse(responseObj) {
+      return responseObj.json();
     }
 
-    searchInput.value = '';
-    displayMatches(matches);
+    responsePromise
+      .then(handleResponse)
+      .then(function (data) {
+        displayMatches(data.Search);
+        searchInput.value = '';
+      });
   }
 }
 
